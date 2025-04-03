@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<!-- Объявление типа документа HTML5 -->
+<html lang="en"> <!-- Язык страницы - английский -->
+<head>
+    <!-- Мета-информация -->
+    <meta charset="UTF-8"> <!-- Кодировка UTF-8 для поддержки всех символов -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Адаптивность для мобильных устройств -->
+    <title>Конвертер валют</title> <!-- Заголовок страницы в браузере -->
+
+    <!-- Внутренние стили CSS -->
+    <style>
+        /* Основные стили страницы */
+        body {
+            font-family: Arial, sans-serif; /* Шрифт текста */
+            max-width: 600px; /* Максимальная ширина контента */
+            margin: 0 auto; /* Центрирование по горизонтали */
+            padding: 20px; /* Внутренние отступы */
+        }
+
+        /* Стили для блока конвертера */
+        .converter {
+            display: flex; /* Используем flex-разметку */
+            flex-direction: column; /* Элементы в колонку */
+            gap: 10px; /* Расстояние между элементами */
+        }
+
+        /* Стили для группы ввода */
+        .input-group {
+            display: flex; /* Flex-разметка для элементов в строку */
+            gap: 10px; /* Расстояние между элементами */
+            align-items: center; /* Выравнивание по центру по вертикали */
+        }
+
+        /* Стили для выпадающих списков и поля ввода */
+        select, input {
+            padding: 8px; /* Внутренние отступы */
+            font-size: 16px; /* Размер шрифта */
+        }
+
+        /* Стили кнопки */
+        button {
+            padding: 10px 15px; /* Внутренние отступы */
+            background-color: #4CAF50; /* Цвет фона */
+            color: white; /* Цвет текста */
+            border: none; /* Без рамки */
+            cursor: pointer; /* Курсор-указатель */
+            font-size: 16px; /* Размер шрифта */
+        }
+
+        /* Стили кнопки при наведении */
+        button:hover {
+            background-color: #45a049; /* Изменение цвета фона */
+        }
+
+        /* Стили блока с результатом */
+        .result {
+            margin-top: 20px; /* Отступ сверху */
+            font-size: 18px; /* Размер шрифта */
+            font-weight: bold; /* Жирное начертание */
+        }
+    </style>
+</head>
+<body>
+    <!-- Заголовок страницы -->
+    <h1>Конвертер валют</h1>
+
+    <!-- Форма для конвертации -->
+    <form method="POST" class="converter">
+        <div class="input-group">
+            <!-- Поле для ввода суммы -->
+            <input type="number" name="amount"
+                   value="{{ request.form.get('amount', 1) }}" <!-- Значение по умолчанию 1 или из формы -->
+
+            <!-- Выпадающий список для выбора исходной валюты -->
+            <select name="from_currency">
+                <!-- Цикл Jinja2 для генерации вариантов валют -->
+                {% for currency in currencies %}
+                <option value="{{ currency }}"
+                        {% if request.form.get('from_currency', 'USD') == currency %}selected{% endif %}>
+                    {{ currency }} <!-- Отображаемый код валюты -->
+                </option>
+                {% endfor %}
+            </select>
+
+            <!-- Символ стрелки между валютами -->
+            <span>→</span>
+
+            <!-- Выпадающий список для выбора целевой валюты -->
+            <select name="to_currency">
+                {% for currency in currencies %}
+                <option value="{{ currency }}"
+                        {% if request.form.get('to_currency', 'EUR') == currency %}selected{% endif %}>
+                    {{ currency }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Кнопка отправки формы -->
+        <button type="submit">Конвертировать</button>
+    </form>
+
+    <!-- Блок для отображения результата (показывается только если есть результат) -->
+    {% if result is not none %}
+    <div class="result">
+        <!-- Отображение суммы, исходной валюты, результата и целевой валюты -->
+        {{ request.form.get('amount', 1) }} {{ request.form.get('from_currency', 'USD') }} =
+        {{ result }} {{ request.form.get('to_currency', 'EUR') }}
+    </div>
+    {% endif %}
+</body>
+</html>
