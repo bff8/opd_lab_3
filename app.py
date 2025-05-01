@@ -19,7 +19,7 @@ def get_currency_rates():
         return {
             'USD': 1.0,  # 1 USD = 1 USD
             'EUR': 0.85,  # 1 USD = 0.85 EUR
-            'RUB': 75.0,  # 1 USD = 75 RUB
+            'RUB': 82.0,  # 1 USD = 82 RUB
             'KZT': 420.0  # 1 USD = 420 KZT
         }
 
@@ -31,29 +31,50 @@ def index():
     # Получаем текущие курсы валют
     currencies = get_currency_rates()
     result = None  # Переменная для хранения результата конвертации
+    error_message = None  # Переменная для хранения сообщения об ошибке
 
     # Проверяем, был ли запрос POST (отправка формы)
     if request.method == 'POST':
-        # Получаем данные из формы:
-        # amount - сумма для конвертации (по умолчанию 1)
-        amount = float(request.form.get('amount', 1))
-        # from_currency - валюта, из которой конвертируем (по умолчанию USD)
-        from_currency = request.form.get('from_currency', 'USD')
-        # to_currency - валюта, в которую конвертируем (по умолчанию EUR)
-        to_currency = request.form.get('to_currency', 'EUR')
+        try:
+            # Получаем данные из формы:
+            amount_str = request.form.get('amount', '1').strip()
 
-        # Проверяем, что обе валюты есть в нашем словаре курсов
-        if from_currency in currencies and to_currency in currencies:
-            # Вычисляем результат: amount * (курс целевой валюты / курс исходной валюты)
-            result = amount * (currencies[to_currency] / currencies[from_currency])
+            # Проверяем, что введено число
+            try:
+                amount = float(amount_str)
+            except ValueError:
+                error_message = "Пожалуйста, введите корректное число"
+                amount = None
 
-    # Рендерим HTML-шаблон и передаем в него данные:
-    # currencies - список доступных валют, отсортированный по алфавиту
-    # result - результат конвертации, округленный до 2 знаков после запятой (или None, если конвертация не проводилась)
+            # Проверяем, что число положительное
+            if amount is not None and amount <= 0:
+                error_message = "Введите положительное количество денег"
+                amount = None
+
+            # Проверяем, что введено не слишком большое число
+            if amount is not None and amount > 1_000_000_000:
+                error_message = "Сумма слишком большая для конвертации"
+                amount = None
+
+            # Получаем валюты
+            from_currency = request.form.get('from_currency', 'USD')
+            to_currency = request.form.get('to_currency', 'EUR')
+
+            # Проверяем, что обе валюты есть в нашем словаре курсов
+            if (amount is not None and from_currency in currencies
+                    and to_currency in currencies):
+                # Вычисляем результат
+                result = amount * (currencies[to_currency] / currencies[from_currency])
+
+        except Exception as e:
+            error_message = f"Ошибка при конвертации: {str(e)}"
+
     return render_template(
         'index.html',
         currencies=sorted(currencies.keys()),
-        result=round(result, 2) if result is not None else None
+        result=round(result, 2) if result is not None else None,
+        error_message=error_message,
+        form_data=request.form  # Передаем данные формы для сохранения введенных значений
     )
 
 
@@ -61,6 +82,3 @@ def index():
 if __name__ == '__main__':
     # Запускаем Flask-приложение с режимом отладки (debug=True)
     app.run(debug=True)
-
-# При запуске приложение будет доступно по адресу http://127.0.0.1:5000/
-# (localhost на порту 5000)
