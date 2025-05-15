@@ -20,6 +20,13 @@
             display: flex;
             gap: 10px;
             align-items: center;
+            margin-bottom: 10px;
+        }
+        .settings-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 15px 0;
         }
         select, input {
             padding: 8px;
@@ -46,6 +53,9 @@
         }
         .error {
             color: red;
+        }
+        label {
+            font-weight: bold;
         }
     </style>
 </head>
@@ -79,6 +89,18 @@
             </select>
         </div>
 
+        <div class="settings-group">
+            <label for="decimal_places">Знаков после запятой:</label>
+            <select name="decimal_places" id="decimal_places">
+                {% for i in range(1, 11) %}
+                <option value="{{ i }}"
+                        {% if form_data.get('decimal_places', '2') == i|string %}selected{% endif %}>
+                    {{ i }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
         <button type="submit">Конвертировать</button>
     </form>
 
@@ -91,7 +113,7 @@
     {% if result is not none %}
     <div class="result">
         {{ form_data.get('amount', '1') }} {{ form_data.get('from_currency', 'USD') }} =
-        {{ result }} {{ form_data.get('to_currency', 'EUR') }}
+        {{ "%.{0}f".format(decimal_places) % result }} {{ form_data.get('to_currency', 'EUR') }}
     </div>
     {% endif %}
 </body>
